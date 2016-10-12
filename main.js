@@ -18,6 +18,8 @@
 	so it doesn't intersect
 
 	Clean up RenderConnection function code
+
+	Clean up CrossoverParents function - two indexOf calls? what?
 */
 
 
@@ -88,6 +90,9 @@ var main = {
 
 		genomeLength: 3,
 
+		mutationProbability: 0.25,
+		unusedGeneInheritance: 0.3, //probability
+
 		initIndividuals: function() {
 			for(var i = 0; i < this.populationLength; i++) {
 				this.individuals.push(new Individual());
@@ -103,29 +108,151 @@ var main = {
 			}
 		},
 
+		//fix index and indexUnused
 		crossoverParents: function(parent1, parent2) {
+			//tier-length population specialization - this shouldn't happen!
 			if(parent1.genome.length != parent2.genome.length)
 				throw Error("Parent 1 and 2 do not share the same genome length!");
 
 			var commonGenes = []
 			  , uncommonGenes = []
 			  , unusedGenes = main.randomPoints
-			  , childGenome = []
-			  , genomeLength = parent1.genome.length;
 
+			  , childGenome = []
+
+			  //due to tier-length population specialization (prevent lower-connection population bias)
+			  //each individual should have equal genome lengths
+			  , genomeLength = parent1.genome.length
+
+			  , indexOfCoords = main.genetics.indexOfObjectCoordinates; 
+
+			//initialize and find out the common, uncommon, and unused genes between two parents
 			for(var i = 0; i < genomeLength; i++) {
-				if(parent1.genome.indexOf(parent2.genome[i]) != -1) {
+				var index = indexOfCoords(parent1.genome, parent2.genome[i]),
+					indexUnused = indexOfCoords(unusedGenes, parent2.genome[i]);
+				
+				if(index != -1) 
 					commonGenes.push(parent2.genome[i]);
-					unusedGenes.splice(unusedGenes.indexOf(parent1.genome[i]), 1);
-				}
-				else {
+				else
 					uncommonGenes.push(parent2.genome[i]);
-					unusedGenes.splice(unusedGenes.indexOf(parent1.genome[i]), 1);
-			
+				
+				//regardless if uncommon or common, if it is present between two individuals,
+				//it is an unused gene, so delete element if present!
+				unusedGenes.splice(indexUnused, 1);
+				
+			}
+
+			//ew
+			function unusedAndCommonGenes(uncommonGenes, unusedGenes, child, commonFirst, commonGeneIndex) {
+				var randomIndex;
+
+				if(commonFirst) {
+					randomIndex = Math.floor(Math.random() * (uncommonGenes.length+1));
+
+					if(uncommonGenes.length != 0) {
+						child.push(uncommonGenes[randomIndex]);
+						uncommonGenes.splice(randomIndex, 1)
+						return;
+					}
+
+				} else {
+					randomIndex = Math.floor(Math.random() * (unusedGenes.length+1));
+					
+					if(unusedGenes.length != 0) {
+						child.push(unusedGenes[randomIndex]);
+						unusedGenes.splice(randomIndex, 1)
+						return;
+					}
+				}
+
+				child.push(commonGenes[commonGeneIndex]);
+
+			}
+
+			/*
+				DISCLAIMER TO KEVIN:
+
+				WHEN THERE IS NO UNCOMMON GENES, THE SCRIPT INHERITS THE CURRENT COMMON GENE
+				AND DOES NOT CHOOSE A RANDOM GENE FROM THE UNUSED GENE POOL
+
+				ALSO, THE SCRIPT SPLICES VITAL ARRAYS SO IF YOU WANTE TO CREATE ANOTHER CHILD,
+				THEN DO SOMETHING ABOUT IT
+			*/
+
+			//creation of child genome
+			if(commonGenes.length != 0) {
+
+				for (var i = 0; i < commonGenes.length; i++) {
+					if(commonGenes.length >= genomeLength) break;
+
+					var random = Math.random();
+					
+					if(random > main.genetics.mutationProbability) {
+						childGenome.push(commonGenes[i]);
+						continue;
+					} else if(random < main.genetics.mutationProbability) {
+						var probability = Math.random();
+
+						//pick between using uncommon genes or unused genes
+						if(probability > main.genetics.uncommonGeneInheritance)
+							//if uncommon and unused genes are not present; function automatically inherits common gene
+							unusedAndCommonGenes(uncommonGenes, unusedGenes, childGenome, true, i);	
+						else
+							unusedAndCommonGenes(uncommonGenes, unusedGenes, childGenome, false, i);
+					
+					}
+
+				}
+
+			//if there is no common genes, pick randomly between unused and uncommon genes
+			} else if(uncommonGenes.length != 0) {
+				if(unusedGenes.length != 0) {
+					for(var i = 0; i < uncommonGenes.length; i++) {
+						var probabiltiy = Math.random();
+
+						if(probability > main.genetics.unusedGeneInheritance && uncommonGenes.length != 0) {
+							var randomIndex = Math.floor(Math.random() * (uncommonGenes.length + 1));
+							
+							childGenome.push(uncommonGenes[randomIndex]);
+							uncommonGenes.splice(randomIndex, 1);
+							
+							continue;
+						} else {
+							
+						}
+
+					}	
+				}
+			} else if(unusedGenes.length != 0) {
+
+			}
+
+
+		},
+
+		unusedAndCommonGenes: function(uncommonGenes, unusedGenes, child, commonFirst, commonGeneIndex) {
+			var randomIndex;
+
+			if(commonFirst) {
+				randomIndex = Math.floor(Math.random() * (uncommonGenes.length+1));
+
+				if(uncommonGenes.length != 0) {
+					child.push(uncommonGenes[randomIndex]);
+					uncommonGenes.splice(randomIndex, 1)
+					return;
+				}
+
+			} else {
+				randomIndex = Math.floor(Math.random() * (unusedGenes.length+1));
+				
+				if(unusedGenes.length != 0) {
+					child.push(unusedGenes[randomIndex]);
+					unusedGenes.splice(randomIndex, 1)
+					return;
 				}
 			}
-			
 
+			child.push(commonGenes[commonGeneIndex]);
 
 		},
 
@@ -161,6 +288,14 @@ var main = {
 			}
 
 			return genome;
+		},
+
+		indexOfObjectCoordinates: function(array, object) {
+			for(var i = 0; i < array.length; i++)
+				if(array[i]['x'] == object['x'] && array[i]['y'] == object['y'])
+					return i;
+
+			return -1;
 		},
 
 		createGeneration: function() {

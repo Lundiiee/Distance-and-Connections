@@ -20,6 +20,7 @@
 	Clean up RenderConnection function code
 */
 
+
 //Part of genetic algorithms
 function Individual() {
 	this.genome = [];
@@ -55,44 +56,39 @@ var main = {
 	enableGeneticOptimization: true,
 
 	init: function() {
-		if(this.amountOfRandomPoints <= this.genetics.genomeLength)
+		if(main.amountOfRandomPoints <= main.genetics.genomeLength)
 			throw Error("Oi. Random points less than genome length mate! That can't do!");
 
-		this.canvasObject.width = this.canvasWidth;
-		this.canvasObject.height = this.canvasHeight;
+		main.canvasObject.width = main.canvasWidth;
+		main.canvasObject.height = main.canvasHeight;
 
 		//since main node is offsetted in canvas to be at center,
 		//the max will only go up to half of its potential
-		this.maxX = this.canvasWidth / 2;
-		this.maxY = this.canvasHeight / 2;
+		main.maxX = main.canvasWidth / 2;
+		main.maxY = main.canvasHeight / 2;
 
-		this.canvas = this.canvasObject.getContext('2d');
+		main.canvas = main.canvasObject.getContext('2d');
 
-		for(var i = 0; i < this.amountOfRandomPoints; i++) {
-			this.randomPoints.push({
-				x: Math.floor(Math.random() * (this.maxX * 2 + 1) - this.maxX),
-				y: Math.floor(Math.random() * (this.maxY * 2 + 1) - this.maxY)
+		for(var i = 0; i < main.amountOfRandomPoints; i++) {
+			main.randomPoints.push({
+				x: Math.floor(Math.random() * (main.maxX * 2 + 1) - main.maxX),
+				y: Math.floor(Math.random() * (main.maxY * 2 + 1) - main.maxY)
 			});
 		}
 
-		this.renderConnections(this.canvas, this);
+		main.renderConnections(main.canvas);
 
-		if(this.enableGeneticOptimization) {
-			this.genetics.initIndividuals(this);
-		}
-			
-		delete this.init;
-		return this;
+		if(main.enableGeneticOptimization)
+			main.genetics.initIndividuals();
 	},
 
 	genetics: {
 		individuals: [],
-		populationLength: 1,
+		populationLength: 20,
 
-		/*TEMPORARY !!!! genome lengths will be dynamic due to the problem's flexible possibilites*/
-		genomeLength: 2,
+		genomeLength: 3,
 
-		initIndividuals: function(main) {
+		initIndividuals: function() {
 			for(var i = 0; i < this.populationLength; i++) {
 				this.individuals.push(new Individual());
 				this.individuals[this.individuals.length-1].genome = this.createRandGenome(main);
@@ -107,6 +103,32 @@ var main = {
 			}
 		},
 
+		crossoverParents: function(parent1, parent2) {
+			if(parent1.genome.length != parent2.genome.length)
+				throw Error("Parent 1 and 2 do not share the same genome length!");
+
+			var commonGenes = []
+			  , uncommonGenes = []
+			  , unusedGenes = main.randomPoints
+			  , childGenome = []
+			  , genomeLength = parent1.genome.length;
+
+			for(var i = 0; i < genomeLength; i++) {
+				if(parent1.genome.indexOf(parent2.genome[i]) != -1) {
+					commonGenes.push(parent2.genome[i]);
+					unusedGenes.splice(unusedGenes.indexOf(parent1.genome[i]), 1);
+				}
+				else {
+					uncommonGenes.push(parent2.genome[i]);
+					unusedGenes.splice(unusedGenes.indexOf(parent1.genome[i]), 1);
+			
+				}
+			}
+			
+
+
+		},
+
 		getFittestIndividual: function(populationArray) {
 			var fittest = populationArray[0],
 				_tempArray = [];
@@ -117,7 +139,7 @@ var main = {
 					fittest = populationArray[i];
 				
 				else if(fittest.fitness == populationArray[i].fitness)
-						_tempArray.push(populationArray[i]);
+					_tempArray.push(populationArray[i]);
 				
 			}
 				
@@ -126,16 +148,15 @@ var main = {
 		},
 
 		//creates random genome from random coordinates
-		createRandGenome: function(main) {
+		createRandGenome: function() {
 			var genome = [];
 			for(var i = 0; i < this.genomeLength; i++) {
 				var randomIndex = Math.floor(Math.random() * (main.randomPoints.length));
 
 				//to not have two of the same gene, change the index to something elese
-				while(genome.indexOf(main.randomPoints[randomIndex]) > -1) {
-					console.log(randomIndex);
+				while(genome.indexOf(main.randomPoints[randomIndex]) > -1)
 					randomIndex = Math.floor(Math.random() * (main.randomPoints.length));
-				}
+				
 				genome.push(main.randomPoints[randomIndex]);
 			}
 
@@ -172,7 +193,7 @@ var main = {
 		return Math.sqrt(Math.pow(deltaX, 2), Math.pow(deltaY, 2));
 	},
 
-	renderConnections: function(canvas, main) {
+	renderConnections: function(canvas) {
 		canvas.beginPath();
 
 		//draws the main center node
@@ -218,6 +239,29 @@ var main = {
 		}
 	}
 
-}.init();
+};
 
-//console.log("Total sum of distances: " + main.calculateSumOfDistances(main.randomPoints));
+main.init();
+
+
+Array.prototype.indexOfObject = function(object) {
+		for(var i = 0; i < this.length; i++) {
+
+			if(Object.keys(this).length != Object.keys(object).length)
+				continue;
+
+			for(var property in this) {
+				if(property != object[property])
+					continue;
+				else if(typeof property == 'object')
+					throw Error("Cannot be used for nested objects!");
+			}
+
+
+			//if it was able to get past continue statement and equality loops,
+			//it is equal, so return index
+			return i;
+		}
+
+		return -1;
+}

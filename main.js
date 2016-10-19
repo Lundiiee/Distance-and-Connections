@@ -19,7 +19,8 @@
 
 	Clean up RenderConnection function code
 
-	Clean up CrossoverParents function - two indexOf calls? what?
+	Clean up CrossoverParents function - four indexOf calls? what?!!
+
 */
 
 
@@ -44,7 +45,7 @@ var main = {
 	canvasHeight: 750,
 
 	randomPoints: [],
-	amountOfRandomPoints: 15,
+	amountOfRandomPoints: 4,
 
 	//max x and y for random point generation
 	maxX: null,
@@ -86,7 +87,7 @@ var main = {
 
 	genetics: {
 		individuals: [],
-		populationLength: 20,
+		populationLength: 2,
 
 		genomeLength: 3,
 
@@ -109,48 +110,63 @@ var main = {
 		},
 
 		crossoverParents: function(parent1, parent2) {
-			if(parent1.genome.length != parent.genome.length)
+			if(parent1.genome.length != parent2.genome.length)
 				throw Error("Parent 1 and 2 do not have equivalent genome lengths!");
 
 			var commonGenes = [],
 				uncommonGenes = [],
-				unusedGenes = main.randomPoints,
+				//call concat to dereference unusedGenes variable from main.randomPoints
+				unusedGenes = main.randomPoints.concat(),
 				
 				childGenome = [],
 				genomeLength = parent1.genome.length,
 				
-				indexOfCoords = main.genetics.indexOfObjectCoordinates;
+				indexOfCoords = main.genetics.indexOfObjectCoordinates,
+
+				mutationProbability = main.genetics.mutationProbability,
+				unusedGeneInheritance = main.genetics.unusedGeneInheritance;
 
 			for(var i = 0; i < genomeLength; i++) {
-				var par2 = parent2.genome[i];
+				var par1 = parent1.genome[i],
+					par2 = parent2.genome[i];
 
-				var index = indexOfCoords(parent1.genome, par2),
-					indexUnused = indexOfCoords(unusedGenes, par2);
+				var index = indexOfCoords(parent2.genome, par1),
+					parentTwoElementNotInParent1 = indexOfCoords(parent1.genome, par2) == -1,
+
+					parentOneElementIndexInUnused = indexOfCoords(unusedGenes, par1),
+					parentTwoElementIndexInUnusued = undefined;
 
 				if(index != -1) 
-					commonGenes.push(par2);
-				else 
-					uncommonGenes.push(par2);
+					commonGenes.push(par1);
+				else
+					uncommonGenes.push(par1);
 
-				unusedGenes.splice(indexUnused, 1);
+				if(parentTwoElementNotInParent1) {
+					uncommonGenes.push(par2);
+					parentTwoElementIndexInUnusued = indexOfCoords(unusedGenes, par2);
+
+					unusedGenes.splice(parentTwoElementIndexInUnusued, 1);
+				}
+
+				unusedGenes.splice(parentOneElementIndexInUnused, 1);				
+
 			}
 
 			function pushMutatedGene(mutationToUnusedGene, unusedGenes, uncommonGenes) {
 				var genePoolChoice = mutationToUnusedGene ? unusedGenes : uncommonGenes,
-					randomIndex = Math.random() * (genePoolChoice.length+1);
+					randomIndex = Math.floor(Math.random() * (genePoolChoice.length+1));
 
 				childGenome.push(uncommonGenes[randomIndex]);
 				uncommonGenes.splice(randomIndex, 1);
 			}
 
-			var mutationProbability = 0.25,
-				unusedGeneInheritance = 0.3;
-
+			//creation of childGenome
+			
 			for(var i = 0; i < genomeLength; i++) {
 				var probability = (Math.random() > mutationProbability) && commonGenes.length != 0;
 				
 				if(probability) {
-					var randomIndex = Math.random() * (commonGenes.length + 1);
+					var randomIndex = Math.floor(Math.random() * (commonGenes.length + 1));
 					
 					childGenome.push(commonGenes[randomIndex]);
 					commonGenes.splice(randomIndex, 1);
@@ -159,52 +175,27 @@ var main = {
 				}
 				
 				//mutation to unused gene is supposed to be low
-				var mutationToUnusedGene = unusedGenesInheritance >= 0.5 ? (Math.random() < unusedGenesInheritance) :
-										   !(Math.random() > unusedGenesInheritance);
+				var mutationToUnusedGene = unusedGeneInheritance >= 0.5 ? (Math.random() < unusedGeneInheritance) :
+										   !(Math.random() > unusedGeneInheritance);
 
 				if(unusedGenes.length != 0) 
 					mutationToUnusedGene = false;
 
-				if(mutationToUnusedGene)
+				if(mutationToUnusedGene) {
 					pushMutatedGene(mutationToUnusedGene, unusedGenes, uncommonGenes);
-				
-				else {
+				} else {
 
 					if(uncommonGenes.length == 0) {
-						childGenome.push(commonGenes[randomIndex)]);
+						childGenome.push(commonGenes[randomIndex]);
 						childGenome.splice(randomIndex, 1);
 						continue;
 					}
 
 					pushMutatedGene(mutationToUnusedGene, unusedGenes, uncommonGenes);
 				}
-			}
+			} 
 
-		},
-
-		unusedAndCommonGenes: function(uncommonGenes, unusedGenes, child, commonFirst, commonGeneIndex) {
-			var randomIndex;
-
-			if(commonFirst) {
-				randomIndex = Math.floor(Math.random() * (uncommonGenes.length+1));
-
-				if(uncommonGenes.length != 0) {
-					child.push(uncommonGenes[randomIndex]);
-					uncommonGenes.splice(randomIndex, 1)
-					return;
-				}
-
-			} else {
-				randomIndex = Math.floor(Math.random() * (unusedGenes.length+1));
-				
-				if(unusedGenes.length != 0) {
-					child.push(unusedGenes[randomIndex]);
-					unusedGenes.splice(randomIndex, 1)
-					return;
-				}
-			}
-
-			child.push(commonGenes[commonGeneIndex]);
+			return childGenome;
 
 		},
 

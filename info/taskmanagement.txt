@@ -1,0 +1,13 @@
+11/13/16 -
+
+
+PROBLEM 1: individual genome length are unequal
+
+In crossoverParents function is not functioning correctly. It was first figured out when two calls to createGeneration() with multiple individuals would lead to unexpected results.
+
+Second generation has individuals with two genes instead of three, therefore have unequal genome lengths.
+
+Therefore, find out why new children have missing genes.
+
+
+_test() function simulates generations with dummy individuals. It loops with different creations of generations N times.

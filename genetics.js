@@ -7,7 +7,7 @@ function Individual() {
 
 main.genetics = {
 	individuals: [],
-	populationLength: 200,
+	populationLength: 20,
 
 	genomeLength: 3,
 
@@ -32,7 +32,7 @@ main.genetics = {
 			//F = C / D
 			this.individuals[this.individuals.length - 1].fitness = this.individuals[this.individuals.length - 1].genome.length /
 				this.individuals[this.individuals.length - 1].distance;
-		}
+			}
 	},
 
 	crossoverParents: function(parent1, parent2) {
@@ -78,7 +78,6 @@ main.genetics = {
 
 		}
 
-
 		function pushMutatedGene(mutationToUnusedGene, unusedGenes, uncommonGenes) {
 			var genePoolChoice = mutationToUnusedGene ? unusedGenes : uncommonGenes,
 				randomIndex = Math.floor(Math.random() * (genePoolChoice.length));
@@ -107,11 +106,14 @@ main.genetics = {
 				useUnusedGeneArrayForMutation = false;
 
 			if (useUnusedGeneArrayForMutation) {
+
 				pushMutatedGene(useUnusedGeneArrayForMutation, unusedGenes, uncommonGenes);
 				continue;
+
 			} else {
 
 				if (uncommonGenes.length === 0) {
+					
 					var commonGenesRandomIndex = Math.floor(Math.random() * (commonGenes.length));
 
 					childGenome.push(commonGenes[commonGenesRandomIndex]);
@@ -123,9 +125,58 @@ main.genetics = {
 			}
 		}
 
+		// if(childGenome.length === 2) {
+		// 	throw Error("a");
+		// }
+
 		return childGenome;
 
-	},
+ 	},
+
+ 	_test: function() {
+ 		var parent1 = new Individual(),
+ 			parent2 = new Individual();
+
+ 		parent1.genome = main.genetics.crossoverParents(main.genetics.individuals[0], main.genetics.individuals[1]);
+ 		parent2.genome = main.genetics.crossoverParents(main.genetics.individuals[0], main.genetics.individuals[1]);
+
+ 		parent1.distance = main.calculateSumOfDistances(parent1.genome);
+ 		parent2.distance = main.calculateSumOfDistances(parent2.genome);
+
+ 		parent1.fitness = parent1.genome.length / parent1.distance;
+ 		parent2.fitness = parent2.genome.length / parent2.distance;
+ 		
+ 		//shouldn't be the same
+
+ 		//distance, fitness, genome
+ 		
+ 		for(var i = 0; i < 12; i++) {
+ 			console.log(i);
+
+ 			var a = main.genetics.initIndividual(parent1, parent2),
+ 				b = main.genetics.initIndividual(parent1, parent2);
+
+	 		var c = main.genetics.initIndividual(a, b),
+	 			d = main.genetics.initIndividual(a, b);
+
+	 		parent1 = c;
+	 		parent2 = d;
+
+ 		}
+ 		
+ 		return parent1.genome.length == parent2.genome.length;
+ 	},
+
+
+ 	initIndividual: function(crossParent1, crossParent2) {
+ 		var individual = new Individual();
+
+ 		individual.genome = main.genetics.crossoverParents(crossParent1, crossParent2);
+ 		individual.distance = main.calculateSumOfDistances(individual.genome);
+ 		individual.fitness = individual.genome.length / individual.distance;
+
+ 		return individual;
+ 	},
 
 	getFittestIndividual: function(populationArray) {
 		var fittest = populationArray[0],
@@ -176,23 +227,32 @@ main.genetics = {
 			console.log("Initindividuals() called because individuals array is empty!");
 		}
 
-		var child = undefined;
+		var newGeneration = [];
 
 		if (this.useTournamentSelection) {
-			var parent1 = this.tournamentSelection(this.individuals),
-				parent2 = this.tournamentSelection(this.individuals);
 
-			console.log(parent1.fitness);
-			console.log(parent2.fitness);
+			for (var i = 0; i < main.genetics.populationLength; i++) {
+				var parent1 = this.tournamentSelection(this.individuals),
+					parent2 = this.tournamentSelection(this.individuals),
+					child = new Individual();
 
-			child = new Individual();
-			child.genome = this.crossoverParents(parent1, parent2);
+				child.genome = this.crossoverParents(parent1, parent2);
+				if(child.genome.length != parent1.genome.length){
+					console.log(child.genome);
+					console.log(parent1.genome);
+					throw Error();
+				}
 
-			child.distance = main.calculateSumOfDistances(child.genome);
-			child.fitness = child.genome.length / child.distance;
+				child.distance = main.calculateSumOfDistances(child.genome);
+				child.fitness = child.genome.length / child.distance;
+
+				newGeneration.push(child);
+			}
+
 		}
-
-		return child;
+		//console.log(newGeneration[0]);
+		console.log(this.averageFitnessOfGeneration(newGeneration));
+		this.individuals = newGeneration;
 
 	},
 
@@ -215,5 +275,16 @@ main.genetics = {
 
 		return bestIndividual;
 
-	}
+	},
+
+	averageFitnessOfGeneration: function(population) {
+		var sumOfFitnesses = 0;
+
+		for(var i = 0; i < population.length; i++) {
+			sumOfFitnesses += population[i].fitness;
+		}
+		
+		return sumOfFitnesses / population.length;
+	},
+
 };

@@ -32,7 +32,7 @@ main.genetics = {
 			//F = C / D
 			this.individuals[this.individuals.length - 1].fitness = this.individuals[this.individuals.length - 1].genome.length /
 				this.individuals[this.individuals.length - 1].distance;
-			}
+		}
 	},
 
 	//TODO: in crossover function, swap unusedgene and uncommon genes in the end of the loop
@@ -54,29 +54,46 @@ main.genetics = {
 			mutationProbability = main.genetics.mutationProbability,
 			useUnusedGeneProbability = main.genetics.useUnusedGeneProbability;
 
-		//set-up for uncommon, common, and unused genes
+		//set-up for uncommon, common, and unused genes and NOT creation of child genome
 		for (var i = 0; i < genomeLength; i++) {
-			var par1 = parent1.genome[i],
-				par2 = parent2.genome[i];
+			//get index of each parent
+			var parentOneIndex = parent1.genome[i],
+				parentTwoIndex = parent2.genome[i];
 
-			var index = indexOfCoords(parent2.genome, par1),
-				parentTwoElementNotInParent1 = indexOfCoords(parent1.genome, par2) == -1,
+			var index = indexOfCoords(parent2.genome, parentOneIndex),
 
-				parentOneElementIndexInUnused = indexOfCoords(unusedGenes, par1),
+				parentTwoIndexNotInParent1 = indexOfCoords(parent1.genome, parentTwoIndex) == -1,
+
+				/*
+					Unused genes is an array that is equal to all possible random points.
+					
+					Check where current parent one's element is placed in the unused gene array
+					because unused gene array and parent-one genome are not in the same order.
+
+					Use indexOfCoords function, similar to indexOf, to find it.
+
+					parentTwoElementIndexInUnused is undefined until we need to call another
+					indexOfCoords for it. Unless parent two's current index is not in parent-one's,
+					we simply push it into common genes. If not, then we search for where 
+					parent two's current index resides in the unused genes.
+				*/
+				parentOneElementIndexInUnused = indexOfCoords(unusedGenes, parentOneIndex),
 				parentTwoElementIndexInUnusued = undefined;
 
 			if (index != -1)
-				commonGenes.push(par1);
+				commonGenes.push(parentOneIndex);
 			else
-				uncommonGenes.push(par1);
+				uncommonGenes.push(parentOneIndex);
 
-			if (parentTwoElementNotInParent1) {
-				uncommonGenes.push(par2);
-				parentTwoElementIndexInUnusued = indexOfCoords(unusedGenes, par2);
+			if (parentTwoIndexNotInParent1) {
+
+				uncommonGenes.push(parentTwoIndex);
+				parentTwoElementIndexInUnusued = indexOfCoords(unusedGenes, parentTwoIndex);
 
 				unusedGenes.splice(parentTwoElementIndexInUnusued, 1);
 			}
 
+			//since the gene has been used by parent one, we take it off the unusedGene array
 			unusedGenes.splice(parentOneElementIndexInUnused, 1);
 
 		}
@@ -84,40 +101,25 @@ main.genetics = {
 		//creation of childGenome	
 		for (var j = 0; j < genomeLength; j++) {
 
-			var useCommonGene = commonGenes.length > 0 && !(Math.random() < mutationProbability);
+			var useCommonGenes = commonGenes.length > 0 && !(Math.random() < mutationProbability);
 
-			if (useCommonGene) {
-		
+			if (useCommonGenes) {
 				var randomIndex = Math.floor(Math.random() * (commonGenes.length));
-
-				if(commonGenes[randomIndex] == undefined) {
-						console.log(commonGenes.length);
-						console.log(randomIndex);
-						throw Error();
-					}	
 
 				childGenome.push(commonGenes[randomIndex]);
 				commonGenes.splice(randomIndex, 1);
 
-				if(childGenome[childGenome.length -1] == undefined)
-					throw Error();
 				continue;
 			}
 
-			var useUnusedGeneArrayForMutation = Math.random() <= useUnusedGeneProbability;
-
-			if (unusedGenes.length === 0)
-				useUnusedGeneArrayForMutation = false;
+			var useUnusedGeneArrayForMutation = Math.random() <= useUnusedGeneProbability &&
+				unusedGenes.length === 0;
 
 			if (useUnusedGeneArrayForMutation) {
 				main.genetics.pushMutatedGene(true, unusedGenes, uncommonGenes, childGenome);
-				if(childGenome[childGenome.length -1] == undefined)
-					throw Error();
-				//childGenome.push('a');
 				continue;
 
 			} else {
-				
 
 				//if uncommongenes is empty, push random index commongene index
 				if (uncommonGenes.length === 0) {
@@ -129,81 +131,62 @@ main.genetics = {
 					continue;
 				}
 
-
 				main.genetics.pushMutatedGene(false, unusedGenes, uncommonGenes, childGenome);
-
-				if(childGenome[childGenome.length - 1] == undefined) {
-					console.log(childGenome);
-					throw Error();
-				}
-
-				//childGenome.push('a');
 			}
 
-			if(j == genomeLength && childGenome.length === 2) {
-
-			}
-		}
-
-		if(childGenome.length === 2) {
-			//console.log(probability);
-			console.log(parent1);
-			console.log(parent2);
-			throw Error("Child Genome is too small!");
 		}
 
 		return childGenome;
 
- 	},
+	},
 
- 	pushMutatedGene: function(useUnusedGene, unusedGenes, uncommonGenes, childGenome) {
-
-		var genePoolChoice = useUnusedGene ? unusedGenes : uncommonGenes,
+	pushMutatedGene: function(useUnusedGeneArray, unusedGenes, uncommonGenes, childGenome) {
+		var genePoolChoice = useUnusedGeneArray ? unusedGenes : uncommonGenes,
 			randomIndex = Math.floor(Math.random() * (genePoolChoice.length));
-		
-		if(genePoolChoice[randomIndex] == undefined)
-			throw Error();
 
 		childGenome.push(genePoolChoice[randomIndex]);
 		genePoolChoice.splice(randomIndex, 1);
 	},
 
- 	_test: function() {
- 		var parent1 = main.genetics.initIndividual(main.genetics.individuals[0], main.genetics.individuals[1]),
- 			parent2 = main.genetics.initIndividual(main.genetics.individuals[0], main.genetics.individuals[1]);
+	_test: function() {
+		var parent1 = main.genetics.initIndividual(main.genetics.individuals[0], main.genetics.individuals[1]),
+			parent2 = main.genetics.initIndividual(main.genetics.individuals[0], main.genetics.individuals[1]);
 
 
- 		//distance, fitness, genome
- 		
- 		for(var i = 0; i < 12; i++) {
+		//distance, fitness, genome
 
- 			var a = main.genetics.initIndividual(parent1, parent2),
- 				b = main.genetics.initIndividual(parent1, parent2);
+		for (var i = 0; i < 12; i++) {
 
-
-
-	 		var c = main.genetics.initIndividual(a, b),
-	 			d = main.genetics.initIndividual(a, b);
-
-	 		parent1 = c;
-	 		parent2 = d;
-
- 		}
-
- 		return parent1.genome.length == parent2.genome.length;
- 	},
+			var a = main.genetics.initIndividual(parent1, parent2),
+				b = main.genetics.initIndividual(parent1, parent2);
 
 
- 	initIndividual: function(crossParent1, crossParent2) {
- 		var individual = new Individual();
 
- 		individual.genome = main.genetics.crossoverParents(crossParent1, crossParent2);
+			var c = main.genetics.initIndividual(a, b),
+				d = main.genetics.initIndividual(a, b);
 
- 		individual.distance = main.calculateSumOfDistances(individual.genome);
- 		individual.fitness = individual.genome.length / individual.distance;
+			parent1 = c;
+			parent2 = d;
 
- 		return individual;
- 	},
+			console.log((c.fitness + d.fitness) / 2);
+		}
+
+
+
+		return parent1.genome.length == parent2.genome.length;
+	},
+
+
+	initIndividual: function(crossParent1, crossParent2) {
+		var individual = new Individual();
+
+		individual.genome = main.genetics.crossoverParents(crossParent1, crossParent2);
+
+		individual.distance = main.calculateSumOfDistances(individual.genome);
+		individual.fitness = individual.genome.length / individual.distance;
+
+		return individual;
+	},
 
 	getFittestIndividual: function(populationArray) {
 		var fittest = populationArray[0],
@@ -264,7 +247,7 @@ main.genetics = {
 					child = new Individual();
 
 				child.genome = this.crossoverParents(parent1, parent2);
-				if(child.genome.length != parent1.genome.length){
+				if (child.genome.length != parent1.genome.length) {
 					console.log(child.genome);
 					console.log(parent1.genome);
 					throw Error();
@@ -307,10 +290,10 @@ main.genetics = {
 	averageFitnessOfGeneration: function(population) {
 		var sumOfFitnesses = 0;
 
-		for(var i = 0; i < population.length; i++) {
+		for (var i = 0; i < population.length; i++) {
 			sumOfFitnesses += population[i].fitness;
 		}
-		
+
 		return sumOfFitnesses / population.length;
 	},
 

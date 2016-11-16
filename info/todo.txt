@@ -1,0 +1,10 @@
+TODO:
+
+1. line 39 of genetics.js -- crossoverParents function.
+	swap unusedgene and uncommon gene at the end of the loop.
+
+2. Clean and document crossoverparents function
+
+3. Check if generations get better over time.
+
+	DONE - it doesn't. :(

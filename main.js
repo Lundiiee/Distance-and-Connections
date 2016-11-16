@@ -38,7 +38,7 @@ var main = {
 	canvasHeight: 750,
 
 	randomPoints: [],
-	amountOfRandomPoints: 20,
+	amountOfRandomPoints: 100,
 
 	//max x and y for random point generation
 	maxX: null,

@@ -41,3 +41,12 @@ TODO: in crossover function, swap unusedgene and uncommon genes in the end of th
 
 Left at:
 Trying to find where child genome pushes an undefined element
+
+==================================================================
+
+11/16/16
+
+Fixed the crossoverparents bug. PushMutatedGene Function inside a function is caleld regardless at first call of crossoverparents function.
+
+Typing errors here and there. And so on.
+

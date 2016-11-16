@@ -81,17 +81,6 @@ main.genetics = {
 
 		}
 
-		function pushMutatedGene(useUnusedGene, unusedGenes, uncommonGenes) {
-			var genePoolChoice = useUnusedGene ? unusedGenes : uncommonGenes,
-				randomIndex = Math.floor(Math.random() * (genePoolChoice.length));
-
-			childGenome.push(genePoolChoice[randomIndex]);
-			
-			if(genePoolChoice[randomIndex] == undefined)
-				throw Error();
-			genePoolChoice.splice(randomIndex, 1);
-		}
-
 		//creation of childGenome	
 		for (var j = 0; j < genomeLength; j++) {
 
@@ -109,6 +98,9 @@ main.genetics = {
 
 				childGenome.push(commonGenes[randomIndex]);
 				commonGenes.splice(randomIndex, 1);
+
+				if(childGenome[childGenome.length -1] == undefined)
+					throw Error();
 				continue;
 			}
 
@@ -118,7 +110,9 @@ main.genetics = {
 				useUnusedGeneArrayForMutation = false;
 
 			if (useUnusedGeneArrayForMutation) {
-				pushMutatedGene(true, unusedGenes, uncommonGenes);
+				main.genetics.pushMutatedGene(true, unusedGenes, uncommonGenes, childGenome);
+				if(childGenome[childGenome.length -1] == undefined)
+					throw Error();
 				//childGenome.push('a');
 				continue;
 
@@ -127,22 +121,22 @@ main.genetics = {
 
 				//if uncommongenes is empty, push random index commongene index
 				if (uncommonGenes.length === 0) {
-					
 					var randomIndex = Math.floor(Math.random() * (commonGenes.length));
 
-					if(commonGenes[randomIndex] == undefined) {
-						console.log(commonGenes.length);
-						console.log(randomIndex);
-						throw Error();
-					}	
+					childGenome.push(commonGenes[randomIndex]);
+					commonGenes.splice(randomIndex, 1);
 
-					childGenome.push(uncommonGenes[randomIndex]);
-					//if(uncommonGenes[randomIndex] == undefined) throw Error();
-					uncommonGenes.splice(randomIndex, 1);
 					continue;
 				}
 
-				pushMutatedGene(false, unusedGenes, uncommonGenes);
+
+				main.genetics.pushMutatedGene(false, unusedGenes, uncommonGenes, childGenome);
+
+				if(childGenome[childGenome.length - 1] == undefined) {
+					console.log(childGenome);
+					throw Error();
+				}
+
 				//childGenome.push('a');
 			}
 
@@ -161,6 +155,18 @@ main.genetics = {
 		return childGenome;
 
  	},
+
+ 	pushMutatedGene: function(useUnusedGene, unusedGenes, uncommonGenes, childGenome) {
+
+		var genePoolChoice = useUnusedGene ? unusedGenes : uncommonGenes,
+			randomIndex = Math.floor(Math.random() * (genePoolChoice.length));
+		
+		if(genePoolChoice[randomIndex] == undefined)
+			throw Error();
+
+		childGenome.push(genePoolChoice[randomIndex]);
+		genePoolChoice.splice(randomIndex, 1);
+	},
 
  	_test: function() {
  		var parent1 = main.genetics.initIndividual(main.genetics.individuals[0], main.genetics.individuals[1]),
@@ -183,9 +189,7 @@ main.genetics = {
 	 		parent2 = d;
 
  		}
- 		
- 		console.log(parent1);
- 		console.log(parent2);
+
  		return parent1.genome.length == parent2.genome.length;
  	},
 
@@ -194,11 +198,9 @@ main.genetics = {
  		var individual = new Individual();
 
  		individual.genome = main.genetics.crossoverParents(crossParent1, crossParent2);
- 		console.log(individual.genome);
+
  		individual.distance = main.calculateSumOfDistances(individual.genome);
  		individual.fitness = individual.genome.length / individual.distance;
-
-
 
  		return individual;
  	},

@@ -9,5 +9,35 @@ Second generation has individuals with two genes instead of three, therefore hav
 
 Therefore, find out why new children have missing genes.
 
+_test() function simulates generations with dummy individuals. It loops with different creations of generations N times. The more generations, the more likely an individual will lose a gene.
 
-_test() function simulates generations with dummy individuals. It loops with different creations of generations N times.
+The bug resides in crossoverParents function. 
+
+11/15/16
+
+Still working on problem 1
+
+Crossover algorithm:
+
+1. If mutation probability is false and common genes array is not empty, push a random index from common genes and delete it.
+
+r = random
+useCommonGene boolean = r < mutationprob && commonArrayLength !== 0;
+
+child push commonGenes [randomIndex]
+commonGenes splice [randomIndex] for only 1 element
+
+
+2. This step is reached if commongenes array is empty or mutation probability is true, we go to uncommon genes array.
+
+3. if uncommongenes probability is true and uncommongenes array is not empty, push unusedgene [randomIndex]
+
+4. if step 3's condition is not met, push an unusedgene [randomIndex] if there is any
+
+5. if unusedgenes is empty, push a commongene [randomIndex]
+
+
+TODO: in crossover function, swap unusedgene and uncommon genes in the end of the loop
+
+Left at:
+Trying to find where child genome pushes an undefined element

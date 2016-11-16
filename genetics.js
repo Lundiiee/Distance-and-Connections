@@ -12,7 +12,7 @@ main.genetics = {
 	genomeLength: 3,
 
 	mutationProbability: 0.25,
-	unusedGeneInheritance: 0.3, //probability
+	useUnusedGeneProbability: 0.3, //probability
 
 	useTournamentSelection: true,
 
@@ -35,13 +35,14 @@ main.genetics = {
 			}
 	},
 
+	//TODO: in crossover function, swap unusedgene and uncommon genes in the end of the loop
 	crossoverParents: function(parent1, parent2) {
 		if (parent1.genome.length != parent2.genome.length)
 			throw Error("Parent 1 and 2 do not have equivalent genome lengths!");
 
 		var commonGenes = [],
 			uncommonGenes = [],
-			//call concat to dereference unusedGenes variable from main.randomPoints
+			//use concat to dereference unusedGenes variable from main.randomPoints
 			unusedGenes = main.randomPoints.concat(),
 
 			childGenome = [],
@@ -49,9 +50,11 @@ main.genetics = {
 
 			indexOfCoords = main.genetics.indexOfObjectCoordinates,
 
+			//probabilties
 			mutationProbability = main.genetics.mutationProbability,
-			unusedGeneInheritance = main.genetics.unusedGeneInheritance;
+			useUnusedGeneProbability = main.genetics.useUnusedGeneProbability;
 
+		//set-up for uncommon, common, and unused genes
 		for (var i = 0; i < genomeLength; i++) {
 			var par1 = parent1.genome[i],
 				par2 = parent2.genome[i];
@@ -78,83 +81,100 @@ main.genetics = {
 
 		}
 
-		function pushMutatedGene(mutationToUnusedGene, unusedGenes, uncommonGenes) {
-			var genePoolChoice = mutationToUnusedGene ? unusedGenes : uncommonGenes,
+		function pushMutatedGene(useUnusedGene, unusedGenes, uncommonGenes) {
+			var genePoolChoice = useUnusedGene ? unusedGenes : uncommonGenes,
 				randomIndex = Math.floor(Math.random() * (genePoolChoice.length));
 
 			childGenome.push(genePoolChoice[randomIndex]);
-			uncommonGenes.splice(randomIndex, 1);
+			
+			if(genePoolChoice[randomIndex] == undefined)
+				throw Error();
+			genePoolChoice.splice(randomIndex, 1);
 		}
 
-		//creation of childGenome
+		//creation of childGenome	
 		for (var j = 0; j < genomeLength; j++) {
-			var probability = commonGenes.length !== 0 && (Math.random() < mutationProbability);
 
-			if (probability === true) {
+			var useCommonGene = commonGenes.length > 0 && !(Math.random() < mutationProbability);
 
+			if (useCommonGene) {
+		
 				var randomIndex = Math.floor(Math.random() * (commonGenes.length));
+
+				if(commonGenes[randomIndex] == undefined) {
+						console.log(commonGenes.length);
+						console.log(randomIndex);
+						throw Error();
+					}	
 
 				childGenome.push(commonGenes[randomIndex]);
 				commonGenes.splice(randomIndex, 1);
-
 				continue;
 			}
 
-			var useUnusedGeneArrayForMutation = Math.random() <= unusedGeneInheritance;
+			var useUnusedGeneArrayForMutation = Math.random() <= useUnusedGeneProbability;
 
 			if (unusedGenes.length === 0)
 				useUnusedGeneArrayForMutation = false;
 
 			if (useUnusedGeneArrayForMutation) {
-
-				pushMutatedGene(useUnusedGeneArrayForMutation, unusedGenes, uncommonGenes);
+				pushMutatedGene(true, unusedGenes, uncommonGenes);
+				//childGenome.push('a');
 				continue;
 
 			} else {
+				
 
+				//if uncommongenes is empty, push random index commongene index
 				if (uncommonGenes.length === 0) {
 					
-					var commonGenesRandomIndex = Math.floor(Math.random() * (commonGenes.length));
+					var randomIndex = Math.floor(Math.random() * (commonGenes.length));
 
-					childGenome.push(commonGenes[commonGenesRandomIndex]);
-					childGenome.splice(commonGenesRandomIndex, 1);
+					if(commonGenes[randomIndex] == undefined) {
+						console.log(commonGenes.length);
+						console.log(randomIndex);
+						throw Error();
+					}	
+
+					childGenome.push(uncommonGenes[randomIndex]);
+					//if(uncommonGenes[randomIndex] == undefined) throw Error();
+					uncommonGenes.splice(randomIndex, 1);
 					continue;
 				}
 
-				pushMutatedGene(useUnusedGeneArrayForMutation, unusedGenes, uncommonGenes);
+				pushMutatedGene(false, unusedGenes, uncommonGenes);
+				//childGenome.push('a');
+			}
+
+			if(j == genomeLength && childGenome.length === 2) {
+
 			}
 		}
 
-		// if(childGenome.length === 2) {
-		// 	throw Error("a");
-		// }
+		if(childGenome.length === 2) {
+			//console.log(probability);
+			console.log(parent1);
+			console.log(parent2);
+			throw Error("Child Genome is too small!");
+		}
 
 		return childGenome;
 
  	},
 
  	_test: function() {
- 		var parent1 = new Individual(),
- 			parent2 = new Individual();
+ 		var parent1 = main.genetics.initIndividual(main.genetics.individuals[0], main.genetics.individuals[1]),
+ 			parent2 = main.genetics.initIndividual(main.genetics.individuals[0], main.genetics.individuals[1]);
 
- 		parent1.genome = main.genetics.crossoverParents(main.genetics.individuals[0], main.genetics.individuals[1]);
- 		parent2.genome = main.genetics.crossoverParents(main.genetics.individuals[0], main.genetics.individuals[1]);
-
- 		parent1.distance = main.calculateSumOfDistances(parent1.genome);
- 		parent2.distance = main.calculateSumOfDistances(parent2.genome);
-
- 		parent1.fitness = parent1.genome.length / parent1.distance;
- 		parent2.fitness = parent2.genome.length / parent2.distance;
- 		
- 		//shouldn't be the same
 
  		//distance, fitness, genome
  		
  		for(var i = 0; i < 12; i++) {
- 			console.log(i);
 
  			var a = main.genetics.initIndividual(parent1, parent2),
  				b = main.genetics.initIndividual(parent1, parent2);
+
+
 
 	 		var c = main.genetics.initIndividual(a, b),
 	 			d = main.genetics.initIndividual(a, b);
@@ -164,6 +184,8 @@ main.genetics = {
 
  		}
  		
+ 		console.log(parent1);
+ 		console.log(parent2);
  		return parent1.genome.length == parent2.genome.length;
  	},
 
@@ -172,8 +194,11 @@ main.genetics = {
  		var individual = new Individual();
 
  		individual.genome = main.genetics.crossoverParents(crossParent1, crossParent2);
+ 		console.log(individual.genome);
  		individual.distance = main.calculateSumOfDistances(individual.genome);
  		individual.fitness = individual.genome.length / individual.distance;
+
+
 
  		return individual;
  	},

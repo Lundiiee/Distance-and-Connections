@@ -40,7 +40,7 @@ commonGenes splice [randomIndex] for only 1 element
 TODO: in crossover function, swap unusedgene and uncommon genes in the end of the loop
 
 Left at:
-Trying to find where child genome pushes an undefined element
+Trying to find where child genome pushes an undefined element -done
 
 ==================================================================
 
@@ -49,4 +49,10 @@ Trying to find where child genome pushes an undefined element
 Fixed the crossoverparents bug. PushMutatedGene Function inside a function is caleld regardless at first call of crossoverparents function.
 
 Typing errors here and there. And so on.
+
+Generation average fitnesses do not increase. expected. 
+
+work on real generation function now with selections.
+
+11/17/16
 

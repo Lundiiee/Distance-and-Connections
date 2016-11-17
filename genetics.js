@@ -7,12 +7,12 @@ function Individual() {
 
 main.genetics = {
 	individuals: [],
-	populationLength: 20,
+	populationLength: 30,
 
 	genomeLength: 3,
 
 	mutationProbability: 0.25,
-	useUnusedGeneProbability: 0.3, //probability
+	useUnusedGeneProbability: 0.5, //probability
 
 	useTournamentSelection: true,
 
@@ -74,7 +74,9 @@ main.genetics = {
 
 					parentTwoElementIndexInUnused is undefined until we need to call another
 					indexOfCoords for it. Unless parent two's current index is not in parent-one's,
-					we simply push it into common genes. If not, then we search for where 
+					we simply push it into common genes. 
+
+					If not, then we search for where 
 					parent two's current index resides in the unused genes.
 				*/
 				parentOneElementIndexInUnused = indexOfCoords(unusedGenes, parentOneIndex),
@@ -112,11 +114,13 @@ main.genetics = {
 				continue;
 			}
 
-			var useUnusedGeneArrayForMutation = Math.random() <= useUnusedGeneProbability &&
-				unusedGenes.length === 0;
-
+			var useUnusedGeneArrayForMutation = (Math.random() <= useUnusedGeneProbability)	 &&
+				unusedGenes.length !== 0;
+			
 			if (useUnusedGeneArrayForMutation) {
+				
 				main.genetics.pushMutatedGene(true, unusedGenes, uncommonGenes, childGenome);
+				
 				continue;
 
 			} else {
@@ -148,35 +152,6 @@ main.genetics = {
 		genePoolChoice.splice(randomIndex, 1);
 	},
 
-	_test: function() {
-		var parent1 = main.genetics.initIndividual(main.genetics.individuals[0], main.genetics.individuals[1]),
-			parent2 = main.genetics.initIndividual(main.genetics.individuals[0], main.genetics.individuals[1]);
-
-
-		//distance, fitness, genome
-
-		for (var i = 0; i < 12; i++) {
-
-			var a = main.genetics.initIndividual(parent1, parent2),
-				b = main.genetics.initIndividual(parent1, parent2);
-
-
-
-			var c = main.genetics.initIndividual(a, b),
-				d = main.genetics.initIndividual(a, b);
-
-			parent1 = c;
-			parent2 = d;
-
-			console.log((c.fitness + d.fitness) / 2);
-		}
-
-
-
-		return parent1.genome.length == parent2.genome.length;
-	},
-
-
 	initIndividual: function(crossParent1, crossParent2) {
 		var individual = new Individual();
 
@@ -192,17 +167,11 @@ main.genetics = {
 		var fittest = populationArray[0],
 			_tempArray = [];
 
-		for (var i = 1; i < populationArray.length; i++) {
-
+		for (var i = 1; i < populationArray.length; i++)
+			
 			if (fittest.fitness < populationArray[i].fitness)
 				fittest = populationArray[i];
 
-			else if (fittest.fitness == populationArray[i].fitness)
-				_tempArray.push(populationArray[i]);
-
-		}
-
-		console.log(_tempArray);
 		return fittest;
 	},
 
@@ -234,6 +203,7 @@ main.genetics = {
 
 		if (this.individuals.length === 0) {
 			this.initIndividuals();
+			
 			console.log("Initindividuals() called because individuals array is empty!");
 		}
 
@@ -272,10 +242,8 @@ main.genetics = {
 		if (main.genetics.tournamentSize >= main.genetics.populationSize)
 			throw Error("Tournament size is greater than the amount of individuals.");
 
-		for (var i = 0; i < main.genetics.tournamentSize; i++) {
+		for (var i = 0; i < main.genetics.tournamentSize; i++)
 			randomlySelected.push(individuals[Math.floor(Math.random() * individuals.length)]);
-		}
-
 
 		var bestIndividual = randomlySelected[0];
 		for (var j = 0; j < randomlySelected.length; j++) {

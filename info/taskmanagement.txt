@@ -56,3 +56,63 @@ work on real generation function now with selections.
 
 11/17/16
 
+I made the real generation function work. Average fitnesses go up :)
+
+====================================================================
+
+11/24/16
+
+Over generations the average fitness gets higher but then is stuck and never goes higher. Even so, the points the fittest individual chooses aren't the obvious choices and are obviously the bad ones.
+
+Working on it.
+
+
+	One of the causes for having a low maximum is that individuals share too much in common and a lot of the same genes. Arrangement of genes do not matter.
+
+	---------------------------------------------------------------
+
+11/27/16
+
+Previously been toying around with mutationProbability and unusedGeneProbability.
+
+There is a low probability, with enough generations, that genes duplicate. The fittest individual, after a number of generations, will have two of the same genes and therefore having a lower distance and dominating the population.
+
+Somewhere in the crossoverParents function, it allows duplication of genes in one genome.
+
+11/29/16
+
+Finding duplication of genes bug.
+
+Lowered the amount of random dots there are. The bigger the population, the more likely there is to be a duplication.
+
+12/1/16
+
+Still working on crossoverParents bug with duplication.
+
+What I know: 
+
+1. Bug is based on probability and higher chance with more generations and higher populations
+
+2. IT IS NOT found in the initiation of the genome
+
+3. Having the same parent does not correlate with having the same parents
+
+Working on returning info of crossover function on a child Genome.
+
+Right now I'm returning common, uncommon, and unusedGenes used for an individual and returning it the indvidiual to save and see a relation.
+I am using the TEMPORARY_CROSSOVER_PARENT_RETURN_INFO variable for it atm to cache the info.	
+
+============================
+
+It would seem that the duplicated gene is in both the common and unused gene arrays. It only happens in common and unused gene. So therefore, the bug resides, not in the creation and mutation of the genome, but the creation of the common and unused genes.
+
+Now it seems that the uncut gene that is causing duplication DOES NOT have to be in common and unused gene. smh.
+
+Can't find the bug. Rewriting the function. smh.
+
+FIXED THE BUG BY REWRITING. SMH. Don't even know how I did it but it's all cool, as long it's fixed. smh
+
+===============================
+
+Next would be optimizing/fine-tuning the probabilities of mutation and mutation to unusedgenes to allow more mutations and better results.
+

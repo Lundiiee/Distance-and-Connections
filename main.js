@@ -23,7 +23,6 @@
 
 */
 
-
 var main = {
 	//node in which distance calculation is based on
 	mainCoordinate: {
@@ -38,7 +37,7 @@ var main = {
 	canvasHeight: 750,
 
 	randomPoints: [],
-	amountOfRandomPoints: 100,
+	amountOfRandomPoints: 25,
 
 	//max x and y for random point generation
 	maxX: null,
@@ -49,7 +48,16 @@ var main = {
 	canvasObject: document.getElementById("canvas"),
 	canvas: null,
 
+	//in case we any other algorithms to solve CDP
 	enableGeneticOptimization: true,
+
+	//array for holding objects with color and array of points
+	//{ color:red, points: [1, 2, 3, ... ] }
+	drawSetOfConnections: [],
+
+	//draws only one set of connections
+	//drawOnly equals to an array
+	drawOnly: undefined,
 
 	init: function() {
 		if (main.amountOfRandomPoints <= main.genetics.genomeLength)
@@ -109,6 +117,8 @@ var main = {
 	renderConnections: function(canvas) {
 		canvas.beginPath();
 
+		canvas.clearRect(0, 0, main.canvasObject.width, main.canvasObject.height);
+
 		//draws the main center node
 		canvas.fillRect(main.mainCoordinate.x + (main.canvasObject.width / 2) - main.nodeWidth / 2,
 			main.mainCoordinate.y + (main.canvasObject.width / 2) - main.nodeHeight / 2,
@@ -120,11 +130,9 @@ var main = {
 		canvas.fillRect(0, main.canvasObject.height / 2, main.canvasObject.width, 1);
 
 
-		//canvas.closePath();
-
-
 		for (var i = 0; i < main.randomPoints.length; i++) {
 			canvas.fillStyle = "black";
+	
 			//draw the random nodes
 			//the random nodes have a width and height 10 less than the main node
 			canvas.fillRect(main.randomPoints[i].x + (main.canvasObject.width / 2) - (main.nodeWidth - 10) / 2,
@@ -132,7 +140,11 @@ var main = {
 				main.nodeWidth - 10,
 				main.nodeHeight - 10);
 
-			canvas.beginPath();
+			canvas.strokeStyle = "black";
+
+ 			canvas.beginPath();
+
+ 			canvas.lineWidth = 1	;
 
 			//draw line from the center node to the random node
 			canvas.moveTo(main.mainCoordinate.x + (main.canvasObject.width / 2),
@@ -150,6 +162,38 @@ var main = {
 			canvas.stroke();
 
 		}
+
+		//temorary way of drawing the drawOnly variable
+		//draw lines over prexisting lines
+		
+		if(main.drawOnly != undefined) {
+
+			for(var j = 0; j < main.drawOnly.connections.length; j++) {
+				canvas.beginPath();
+
+				canvas.strokeStyle = "red";
+
+				canvas.lineWidth = 5;
+			
+				//draw line from the center node to the random node
+				canvas.moveTo(main.mainCoordinate.x + (main.canvasObject.width / 2),
+					main.mainCoordinate.y + (main.canvasObject.height / 2));
+
+				canvas.lineTo(main.drawOnly.connections[j].x + (main.canvasObject.width / 2),
+					main.drawOnly.connections[j].y + (main.canvasObject.height / 2));
+
+				//prints the distance between main node and random point
+				if (main.printDistance)
+					canvas.fillText("" + main.calulateDistance(main.mainCoordinate, main.drawOnly.connections[j]),
+						(main.mainCoordinate.x + main.drawOnly.connections[j].x) / 2 + (main.canvasObject.width / 2) + 3,
+						(main.mainCoordinate.y + main.drawOnly.connections[j].y) / 2 + (main.canvasObject.height / 2) + 2);
+
+				canvas.stroke();
+
+
+			}
+		}
+
 	}
 
 };
@@ -176,3 +220,4 @@ Array.prototype.indexOfObject = function(object) {
 
 	return -1;
 };
+

@@ -3,8 +3,6 @@ function Individual() {
 	this.genome = [];
 	this.distance = 0;
 	this.fitness = 0;
-
-	this.TEMPORARY_CROSSOVER_PARENT_RETURN_INFO = undefined;
 }
 
 main.genetics = {
@@ -14,7 +12,7 @@ main.genetics = {
 	genomeLength: 3,
 
 	mutationProbability: 0.4,
-	useUnusedGeneProbability: 0.7, //probability
+	useUnusedGeneProbability: 0.2, //probability
 
 	useTournamentSelection: true,
 
@@ -84,11 +82,6 @@ main.genetics = {
 			}
 		}
 		
-		//concat() to dereference
-		var _commonGenes = commonGenes.concat(),
-			_uncommonGenes = uncommonGenes.concat(),
-			_unusedGenes = unusedGenes.concat();
-
 		//creation of childGenome	
 		for (var j = 0; j < genomeLength; j++) {
 
@@ -123,25 +116,15 @@ main.genetics = {
 					continue;
 				}
 
-				//we're using ucommon genes because we didn't choose to use unusedgenes
+				//we're using uncommon genes because we didn't choose to use unusedgenes
+				//and also uncommon gene array is not empty
 				main.genetics.pushMutatedGene(false, unusedGenes, uncommonGenes, childGenome);
 
 			}
 
 		}
 
-
-		return {
-			childGenome: childGenome,
-
-			parent1: parent1,
-			parent2: parent2,
-
-			//info
-			common: _commonGenes,
-			uncommonGenes: _uncommonGenes,
-			unusedgenes: _unusedGenes
-		};
+		return childGenome;
 
 	},
 
@@ -156,11 +139,7 @@ main.genetics = {
 	initIndividual: function(crossParent1, crossParent2) {
 		var individual = new Individual();
 
-		var TEMPORARY_CROSSOVER_PARENT_RETURN_INFO = main.genetics.crossoverParents(crossParent1, crossParent2);
-
-		individual.genome = TEMPORARY_CROSSOVER_PARENT_RETURN_INFO.childGenome;
-		individual.TEMPORARY_CROSSOVER_PARENT_RETURN_INFO = TEMPORARY_CROSSOVER_PARENT_RETURN_INFO;
-
+		individual.genome = main.genetics.crossoverParents(crossParent1, crossParent2);
 
 		individual.distance = main.calculateSumOfDistances(individual.genome);
 		individual.fitness = individual.genome.length / individual.distance;
@@ -217,28 +196,14 @@ main.genetics = {
 
 		if (this.useTournamentSelection) {
 
-			//minues 1 from populationLength because we push fittestIndividual
+			//minus 1 from populationLength because we push fittestIndividual
 			for (var i = 0; i < main.genetics.populationLength - 1; i++) {
 				var parent1 = this.tournamentSelection(this.individuals),
 					parent2 = this.tournamentSelection(this.individuals),
 					child = new Individual();
 
-				/*
-					Check if parent1 is equal to parent2
-
-					reason for checking fitness score is because
-					two parents can't have two of the same fitness scores
-					unless they have the same genes
-				*/
-
-				// while (parent1.fitness == parent2.fitness) {
-				// 	parent2 = this.tournamentSelection(this.individuals);
-				// }
-
-				//child.genome = this.crossoverParents(parent1, parent2);
-				var TEMPORARY_CROSSOVER_PARENT_RETURN_INFO = this.crossoverParents(parent1, parent2);
-				child.genome = TEMPORARY_CROSSOVER_PARENT_RETURN_INFO.childGenome;
-				child.TEMPORARY_CROSSOVER_PARENT_RETURN_INFO = TEMPORARY_CROSSOVER_PARENT_RETURN_INFO;
+				
+				child.genome = this.crossoverParents(parent1, parent2);
 				
 				child.distance = main.calculateSumOfDistances(child.genome);
 				child.fitness = child.genome.length / child.distance;

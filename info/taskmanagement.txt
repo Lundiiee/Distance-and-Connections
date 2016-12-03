@@ -116,3 +116,58 @@ FIXED THE BUG BY REWRITING. SMH. Don't even know how I did it but it's all cool,
 
 Next would be optimizing/fine-tuning the probabilities of mutation and mutation to unusedgenes to allow more mutations and better results.
 
+12/2/16
+
+Working on removing return info code. -done
+
+Working on optimizing mutation probabilities and stuff.
+
+Worked on predicting the amount of configurations for a genome length given a set of random points. The equation goes as follows:
+
+possible configs = r^2-gr+1
+
+where r = amount of random points
+      g = genome length
+
+      (r-1)(r-g) + r-(g-1) from a repeating pattern.
+
+Exception with genome-length of 1. A genome-length of one will always
+equal the amount of random points there are.
+
+p = r, if g = 1.
+
+This was all done to better understand how to optimize the genetic algorithms.
+
+The surprising thing is that there are surprsingly not alot of configurations for genome-lengths, yet the program fails to find the best one.
+
+
+12/3/16
+
+Working on breaking down math and problem to find out why generations will not improve.
+
+P_O = r^2-gr+1
+
+P_N = ((P_O - 1)^t)/P_O^t
+
+where
+
+P_N = probability that after t generations that the best solution will not be found at random.
+
+P_O = possible results
+
+To find how many random is needed to get the probability to 10% of not getting it, we do:
+
+g = goal decimal
+
+P_N = g
+P_N = 0.1
+
+log_(P_N)(g) = amount of generations needed
+
+By these equations, with a 5 point random space and a 2 genome-length, 35 random tries would get us to 10% chance of not getting the best answer.
+
+Working on rendering data of random points to the canvas. 
+
+
+THERE WAS A BUG IN CALCULATE DISTANCE FUNCTION. MAJOR BUG. SMH
+IT WAS RETURN MATH.SQRT(delta x^2, delta y^2), replaced the comma with a +

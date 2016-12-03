@@ -37,7 +37,7 @@ var main = {
 	canvasHeight: 750,
 
 	randomPoints: [],
-	amountOfRandomPoints: 25,
+	amountOfRandomPoints: 250,
 
 	//max x and y for random point generation
 	maxX: null,
@@ -63,7 +63,8 @@ var main = {
 		if (main.amountOfRandomPoints <= main.genetics.genomeLength)
 			throw Error("Oi. Random points less than genome length mate! That can't do!");
 
-		main.genetics.tournamentSize = 5;
+		//main.genetics.tournamentSize = Math.floor(main.genetics.populationLength*0.2);
+		main.genetics.tournamentSize = 10
 
 		main.canvasObject.width = main.canvasWidth;
 		main.canvasObject.height = main.canvasHeight;
@@ -91,27 +92,32 @@ var main = {
 
 	//calculates the sum of distances FROM THE MAIN NODE
 	calculateSumOfDistances: function(randomPoints) {
-		var distanceSum = 0,
-			distanceFromNode = [];
+		var distanceSum = 0;
+//			distanceFromNode = [];
 
 		for (var i = 0; i < randomPoints.length; i++) {
 			distanceSum += this.calculateDistance(this.mainCoordinate, randomPoints[i]);
-			distanceFromNode.push({
-				x: randomPoints[i].x,
-				y: randomPoints[i].y,
-				distance: this.calculateDistance(this.mainCoordinate, randomPoints[i])
-			});
+			// distanceFromNode.push({
+			// 	x: randomPoints[i].x,
+			// 	y: randomPoints[i].y,
+			// 	distance: this.calculateDistance(this.mainCoordinate, randomPoints[i])
+			// });
 		}
 
 
 		return distanceSum;
 	},
 
+	//temporary debug function
+	_distanceFromNode: function(point) {
+		return this.calculateDistance(thismainCoordinate, point);
+	},	
+
 	calculateDistance: function(point1, point2) {
 		var deltaX = Math.abs(point1.x - point2.x),
 			deltaY = Math.abs(point1.y - point2.y);
 
-		return Math.sqrt(Math.pow(deltaX, 2), Math.pow(deltaY, 2));
+		return Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
 	},
 
 	renderConnections: function(canvas) {
@@ -155,7 +161,7 @@ var main = {
 
 			//prints the distance between main node and random point
 			if (main.printDistance)
-				canvas.fillText("" + main.calulateDistance(main.mainCoordinate, main.randomPoints[i]),
+				canvas.fillText("" + main.calculateDistance(main.mainCoordinate, main.randomPoints[i]),
 					(main.mainCoordinate.x + main.randomPoints[i].x) / 2 + (main.canvasObject.width / 2) + 3,
 					(main.mainCoordinate.y + main.randomPoints[i].y) / 2 + (main.canvasObject.height / 2) + 2);
 
@@ -182,16 +188,27 @@ var main = {
 				canvas.lineTo(main.drawOnly.connections[j].x + (main.canvasObject.width / 2),
 					main.drawOnly.connections[j].y + (main.canvasObject.height / 2));
 
-				//prints the distance between main node and random point
-				if (main.printDistance)
-					canvas.fillText("" + main.calulateDistance(main.mainCoordinate, main.drawOnly.connections[j]),
-						(main.mainCoordinate.x + main.drawOnly.connections[j].x) / 2 + (main.canvasObject.width / 2) + 3,
-						(main.mainCoordinate.y + main.drawOnly.connections[j].y) / 2 + (main.canvasObject.height / 2) + 2);
+
+				// //prints the distance between main node and random point
+				// if (main.printDistance)
+				// 	canvas.fillText("" + main.calculateDistance(main.mainCoordinate, main.drawOnly.connections[j]),
+				// 		(main.mainCoordinate.x + main.drawOnly.connections[j].x) / 2 + (main.canvasObject.width / 2) + 3,
+				// 		(main.mainCoordinate.y + main.drawOnly.connections[j].y) / 2 + (main.canvasObject.height / 2) + 2);
 
 				canvas.stroke();
 
-
 			}
+
+			// for(var j = 0; j < main.drawOnly.connections.length; j++) {
+			// 		//prints the distance between main node and random point
+			// 	canvas.fillStyle = "blue";
+			// 	console.log(main.calculateDistance(main.mainCoordinate, main.drawOnly.connections[j]));
+			// 	if (main.printDistance)
+			// 		canvas.fillText("" + main.calculateDistance(main.mainCoordinate, main.drawOnly.connections[j]),
+			// 			(main.mainCoordinate.x + main.drawOnly.connections[j].x) / 2 + (main.canvasObject.width / 2) + 3,
+			// 			(main.mainCoordinate.y + main.drawOnly.connections[j].y) / 2 + (main.canvasObject.height / 2) + 2);
+
+			// }
 		}
 
 	}

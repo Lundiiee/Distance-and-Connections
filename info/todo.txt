@@ -27,3 +27,8 @@ TODO:
 7. Fix bug where duplication of genes happen
 	
 	a. create return info 
+
+	-has been fixed by rewriting!
+
+8. Remove return info code from todo 7
+	-done
